@@ -10,7 +10,7 @@ To download the data onto your server instances use the command:
 * Cervical cancer: risk factors for biopsy 
 * Heart Disease: prescence of heart disease
 * Diabetes: presence of diabetes
-* Back pain:
+* Back pain: not really sure what the target variables,
 
 ## Acknowledgements
 
