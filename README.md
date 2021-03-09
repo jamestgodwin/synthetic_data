@@ -7,10 +7,10 @@ To download the data onto your server instances use the command:
 `git clone https://github.com/jamestgodwin/synthetic_data.git`
 
 ## Datasets
-Cervical cancer: risk factors for biopsy 
-Heart Disease: prescence of heart disease
-Diabetes: presence of diabetes
-Back pain:
+* Cervical cancer: risk factors for biopsy 
+* Heart Disease: prescence of heart disease
+* Diabetes: presence of diabetes
+* Back pain:
 
 ## Acknowledgements
 
