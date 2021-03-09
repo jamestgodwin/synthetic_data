@@ -1,23 +1,41 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-from sdv.tabular import CTGAN, CopulaGAN, TVAE
+# Standard imports
 import pandas as pd
 from tqdm import tqdm
+
+# Plotting imports
 import matplotlib.pyplot as plt
 import seaborn as sns
+
+# SDV imports
+from sdv.tabular import CTGAN, CopulaGAN, TVAE
 from sdv.metrics.tabular import (BinaryDecisionTreeClassifier,
                                  BinaryAdaBoostClassifier,
                                  BinaryLogisticRegression,
                                  BinaryMLPClassifier,
                                  LogisticDetection,
                                  SVCDetection)
+
+# ML imports
 from sklearn.model_selection import train_test_split
 
 
 class SDVInputDataset:
     '''
-    !! TODO: Add option to pass df instead of filename
+    filepath: str: path to real dataset
+
+    real_dataframe: pd.DataFrame: real dataframe (already imported)
+
+    Pass one or the other of filepath or real_dataframe
+    - the latter will override the former
+    !TODO: Raise error instead if both passed
+
+    primary_key: str: colname to use as primary key (column where every value
+                      must be unique)
+
+    header: int: Row number to use in dataframe import from filename
 
     fields_to_anonymise: dict:
         key:val of field to anonymise (string) and string referance to one of
@@ -27,21 +45,30 @@ class SDVInputDataset:
 
     '''
     def __init__(self,
-                 filepath,
+                 filepath=None,
+                 real_dataframe=None,
                  primary_key=None,
                  header=None,
                  fields_to_anonymize=None
                  ):
 
-        self.filepath = filepath
+        if filepath is not None:
+            self.filepath = filepath
+            self.dataset = pd.read_csv(self.filepath, header=header)
+
+        if real_dataframe is not None:
+            self.dataset = real_dataframe
+
         self.primary_key = primary_key
         self.fields_to_anonymize = fields_to_anonymize
 
-        self.dataset = pd.read_csv(self.filepath, header=header)
+
 
 
 class SDVOutputDataset:
     '''
+    nrows: int: number of rows of data to create (i.e. length of
+                synthetic dataframe)
     '''
     def __init__(self,
                  nrows,
@@ -52,6 +79,21 @@ class SDVOutputDataset:
 
 class SDVUniversalParams:
     '''
+    models to run: list of str: list containing any (lowercase) combination of
+    - ctgan
+    - copulagan
+    - tvae
+
+    epochs: int: number of epochs to train for
+                 only affects ctgan and copulagan
+
+    batch_size: int: size of batches for training. Must be divisible by 10.
+                     only affects ctgan and copulagan
+
+    generator_dim: tuple of ints: layer dimensions of generator network
+
+    discriminator_dim: tuple of ints: layer dimensions of discriminator network
+
     '''
     def __init__(self,
                  models_to_run=['ctgan'],
@@ -79,6 +121,10 @@ class SDVUniversalParams:
 
 def fit_ctgan(input_dataset, universal_params):
     '''
+    input_dataset: SDVInputDataset object
+    universal_params: SDVUniversalParams object
+
+    Returns CTGAN model
     '''
     model = CTGAN(primary_key=input_dataset.primary_key,
                   anonymize_fields=input_dataset.fields_to_anonymize,
@@ -95,6 +141,10 @@ def fit_ctgan(input_dataset, universal_params):
 
 def fit_copulagan(input_dataset, universal_params):
     '''
+    input_dataset: SDVInputDataset object
+    universal_params: SDVUniversalParams object
+
+    Returns CopulaGAN model
     '''
     model = CopulaGAN(primary_key=input_dataset.primary_key,
                       anonymize_fields=input_dataset.fields_to_anonymize,
@@ -111,6 +161,10 @@ def fit_copulagan(input_dataset, universal_params):
 
 def fit_tvae(input_dataset, universal_params):
     '''
+    input_dataset: SDVInputDataset object
+    universal_params: SDVUniversalParams object
+
+    Returns TVAE model
     '''
     model = TVAE(primary_key=input_dataset.primary_key,
                  anonymize_fields=input_dataset.fields_to_anonymize
@@ -125,6 +179,10 @@ def fit_tvae(input_dataset, universal_params):
 
 def get_models(run_params, input_dataset):
     '''
+    input_dataset: SDVInputDataset object
+    run_params: SDVUniversalParams object
+
+    Takes list of models to fit from run_params and returns fitted models
     '''
     models = {}
 
@@ -142,7 +200,11 @@ def get_models(run_params, input_dataset):
 
 def generate_datasets(models, output_dataset):
     '''
+    models: dict: output of get_models
+    output_dataset: SDVOutputDataset object
 
+    Returns dict of synthetic datasets generated using models specified in
+    SDVUniversalParams object that was passed to get_models
     '''
 
     synthetic_datasets = {}
@@ -158,7 +220,11 @@ def sdv_dataset_synthesizer(input_dataset,
                             output_dataset,
                             run_params):
     '''
-    TODO: IMPLEMENT RUNPARAMS
+    Convenience function for generating synthetic datasets
+
+    input_dataset: SDVInputDataset object
+    run_params: SDVUniversalParams object
+    output_dataset: SDVOutputDataset object
     '''
 
     models = get_models(run_params=run_params,
@@ -167,16 +233,25 @@ def sdv_dataset_synthesizer(input_dataset,
     return generate_datasets(models, output_dataset)
 
 
-def sdv_dataset_synthesizer_from_saved_model(model_pkl,
-                                             output_dataset,
-                                             run_params):
-    '''
-    '''
-    raise NotImplementedError
+# def sdv_dataset_synthesizer_from_saved_model(model_pkl,
+#                                              output_dataset,
+#                                              run_params):
+#     '''
+#     '''
+#     raise NotImplementedError
 
 
 def compare_methods_column_pairs(dict_of_dfs, col1, col2):
-    fig, ax = plt.subplots(2, 2, figsize=(8, 8), sharex=True, sharey=True)
+    '''
+    Return scatterplot of specified columns
+    dict_of_dfs: dict: dictionary where keys are names of dataframes and values
+                       are pd.DataFrame objects
+    col1: str: column name for x axis. Must be present in every dataframe.
+    col2: str: column name for x axis. Must be present in every dataframe.
+    '''
+    fig, ax = plt.subplots(2, 2,
+                           figsize=(8, 8),
+                           sharex=True, sharey=True)
     for i, (name, df) in enumerate(dict_of_dfs.items()):
         df.plot(kind='scatter', x=col1, y=col2,
                 title=name, ax=ax.flatten()[i])
@@ -184,7 +259,16 @@ def compare_methods_column_pairs(dict_of_dfs, col1, col2):
 
 
 def check_formats(dict_of_dfs, input_dataset):
-    "Comparing with real dataframe"
+    '''
+    Check that all synthetic dataframes have the same columns and datatypes
+    as the real dataframe
+
+    dict_of_dfs: dict: dictionary where keys are names of dataframes and values
+                       are pd.DataFrame objects
+
+    input_dataset: SDVInputDataset object
+
+    '''
     for name, df in dict_of_dfs.items():
         if name != "real":
             print(f"Column names the same for {name}: {np.all(df.columns == input_dataset.dataset.columns)}")
@@ -193,7 +277,15 @@ def check_formats(dict_of_dfs, input_dataset):
 
 
 def corr_plot(dict_of_dfs):
-    fig, ax = plt.subplots(2,2, figsize=(8,8), sharex=True, sharey=True)
+    '''
+    Generate comparison correlation plots for dataframes
+
+    dict_of_dfs: dict: dictionary where keys are names of dataframes and values
+                       are pd.DataFrame objects
+    '''
+    fig, ax = plt.subplots(2, 2,
+                           figsize=(8, 8),
+                           sharex=True, sharey=True)
     for i, (name, df) in enumerate(dict_of_dfs.items()):
         sns.heatmap(df.corr(), ax=ax.flatten()[i])
         ax.flatten()[i].set_title(name)
@@ -201,6 +293,15 @@ def corr_plot(dict_of_dfs):
 
 
 def simple_metrics(dict_of_dfs, input_dataset):
+    '''
+    Compute simple metrics (logistic detection score and SVC detection score)
+    for synthetic dataframes
+
+    dict_of_dfs: dict: dictionary where keys are names of dataframes and values
+                       are pd.DataFrame objects
+
+    input_dataset: SDVInputDataset object
+    '''
     results = []
 
     metrics_dict = {"Logistic Detection Score": LogisticDetection,
@@ -218,6 +319,15 @@ def simple_metrics(dict_of_dfs, input_dataset):
 
 
 def classifier_comparison(dict_of_dfs, target_col):
+    '''
+    dict_of_dfs: dict: dictionary where keys are names of dataframes and values
+                       are pd.DataFrame objects
+
+    input_dataset: SDVInputDataset object
+
+    target_col: str: column containing feature of interest that is being aimed
+                     for
+    '''
     classifier_dict = {
         "Decision Tree": BinaryDecisionTreeClassifier,
         "AdaBoost": BinaryAdaBoostClassifier,
@@ -239,7 +349,7 @@ def classifier_comparison(dict_of_dfs, target_col):
                 # synthetic performance and real performance
                 syn_train, syn_test = train_test_split(df,
                                                        test_size=0.2,
-                                                      random_state=42)
+                                                       random_state=42)
 
                 result = classifier.compute(syn_train, real_test,
                                             target=target_col)
@@ -253,6 +363,10 @@ def classifier_comparison(dict_of_dfs, target_col):
 
 
 def plot_classifier_metrics(classifier_metrics_df):
+    '''
+    Plot the output of classifier_comparison() or simple_metrics(),
+    grouped by metric or classifier
+    '''
     fig, ax = plt.subplots(1, 1, figsize=(10, 6))
     sns.barplot(x='Classifier', y='Result', hue='Model',
                 data=classifier_metrics_df,
