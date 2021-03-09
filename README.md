@@ -1,2 +1,2 @@
-# synthetic_data
+# Synthetic Data
 MADWUD hackathon
