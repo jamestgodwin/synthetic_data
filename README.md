@@ -1,5 +1,5 @@
 # Synthetic Data - MADWUD hackathon
-## Sammi Rosser, Beth Voller, James Godwin 
+## Sammi Rosser, Beth Voller, James Godwin, Tamir Sirkis 
 
 To download the files use the command:
 
