@@ -21,10 +21,10 @@ def synth_metrics(real_data, synthetic_data):
         .abs().values.flatten().mean()
     plt.show()
     print(f'Average difference between correlations: {avg_diff:.3f}')
-    num_cols = len(real_data.columns)
+    num_cols = int(len(real_data.columns))
     fig, axes = plt.subplots((num_cols+1)//2,2, figsize=(num_cols*3, num_cols*3))
     for i, col in enumerate(real_data.columns):
         axes.flatten()[i].boxplot(real_data[col], positions=[1])
         axes.flatten()[i].boxplot(synthetic_data[col], positions=[2])
-        #axes.flatten()[i].set_title('%s' % col)
+        axes.flatten()[i].set_title('%s' % col)
     plt.show()
