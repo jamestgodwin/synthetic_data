@@ -62,7 +62,9 @@ class SDVInputDataset:
         self.primary_key = primary_key
         self.fields_to_anonymize = fields_to_anonymize
 
-
+        self.real_train, self.real_test = train_test_split(self.dataset,
+                                                           test_size=0.2,
+                                                           random_state=42)
 
 
 class SDVOutputDataset:
@@ -319,6 +321,7 @@ def simple_metrics(dict_of_dfs, input_dataset):
 
 
 def classifier_comparison(dict_of_dfs, target_col):
+def classifier_comparison(dict_of_dfs, target_col, input_dataset):
     '''
     dict_of_dfs: dict: dictionary where keys are names of dataframes and values
                        are pd.DataFrame objects
@@ -337,10 +340,6 @@ def classifier_comparison(dict_of_dfs, target_col):
 
     results = []
 
-    real_train, real_test = train_test_split(dict_of_dfs['real'],
-                                             test_size=0.2,
-                                             random_state=42)
-
     for classifier_name, classifier in classifier_dict.items():
 
         for name, df in dict_of_dfs.items():
@@ -351,14 +350,18 @@ def classifier_comparison(dict_of_dfs, target_col):
                                                        test_size=0.2,
                                                        random_state=42)
 
-                result = classifier.compute(syn_train, real_test,
+                result = classifier.compute(syn_train,
+                                            input_dataset.real_test,
                                             target=target_col)
             else:
-                result = classifier.compute(real_train, real_test,
+                result = classifier.compute(input_dataset.real_train,
+                                            input_dataset.real_test,
                                             target=target_col)
+
             results.append({'Model': name,
                             "Classifier": classifier_name,
                             "Result": result})
+
     return pd.DataFrame(results)
 
 
