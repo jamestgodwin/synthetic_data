@@ -21,7 +21,6 @@ from sdv.metrics.tabular import (BinaryDecisionTreeClassifier,
 # ML imports
 from sklearn.model_selection import train_test_split
 
-
 class SDVInputDataset:
     '''
     filepath: str: path to real dataset
@@ -299,6 +298,15 @@ def simple_metrics(dict_of_dfs, input_dataset):
     Compute simple metrics (logistic detection score and SVC detection score)
     for synthetic dataframes
 
+    From SDV Documentation:
+    "The metrics of this family evaluate how hard it is to distinguish
+    the synthetic data from the real data by using a Machine Learning model.
+    To do this, the metrics will shuffle the real data and synthetic data
+    together with flags indicating whether the data is real or synthetic,
+    and then cross validate a Machine Learning model that tries to predict
+    this flag. The output of the metrics will be the 1 minus the average ROC
+    AUC score across all the cross validation splits."
+
     dict_of_dfs: dict: dictionary where keys are names of dataframes and values
                        are pd.DataFrame objects
 
@@ -320,9 +328,14 @@ def simple_metrics(dict_of_dfs, input_dataset):
     return pd.DataFrame(results)
 
 
-def classifier_comparison(dict_of_dfs, target_col):
 def classifier_comparison(dict_of_dfs, target_col, input_dataset):
     '''
+    From SDV Documentation:
+    This family of metrics will evaluate whether it is possible to replace
+    the real data with synthetic data in order to solve a Machine Learning
+    Problem by learning a Machine Learning model on the synthetic data and
+    then evaluating the score which it obtains when evaluated on the real data.
+
     dict_of_dfs: dict: dictionary where keys are names of dataframes and values
                        are pd.DataFrame objects
 
@@ -330,6 +343,12 @@ def classifier_comparison(dict_of_dfs, target_col, input_dataset):
 
     target_col: str: column containing feature of interest that is being aimed
                      for
+
+    input_dataset: SDVInputDataset object
+
+    !! POSSIBLE ISSUE
+    The classifiers don't take arguments so not sure how to set seed
+
     '''
     classifier_dict = {
         "Decision Tree": BinaryDecisionTreeClassifier,
