@@ -64,6 +64,7 @@ dependencies:
     - scipy==1.6.1
     - sdmetrics==0.2.0
     - sdv==0.8.0
+    - seaborn==0.11.1
     - sktime==0.5.3
     - statsmodels==0.12.2
     - text-unidecode==1.3
