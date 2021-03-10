@@ -26,4 +26,5 @@ def synth_metrics(real_data, synthetic_data):
     for i, col in enumerate(real_data.columns):
         axes.flatten()[i].boxplot(real_data[col], positions=[1])
         axes.flatten()[i].boxplot(synthetic_data[col], positions=[2])
+        axes.flatten()[i].set_title('%s' % col)
     plt.show()
